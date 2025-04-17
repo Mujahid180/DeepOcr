@@ -1,34 +1,26 @@
 import easyocr
-import cv2
-import numpy as np
 import google.generativeai as genai
 
-# Configure Google Gemini API
-genai.configure(api_key="AIzaSyBCuS6N-Rfgleo3WurTfdG35BCb7yRK1O8")
-model = genai.GenerativeModel("gemini-1.5-pro-latest")
+# Initialize EasyOCR (you can change language codes to suit your needs)
+reader = easyocr.Reader(['en'], gpu=False)
 
-# Initialize EasyOCR
-reader = easyocr.Reader(["hi", "en"], gpu=False)
+# Configure Google Gemini AI
+genai.configure(api_key="AIzaSyBCuS6N-Rfgleo3WurTfdG35BCb7yRK1O8")  # Replace with your API key
 
-def preprocess_image(image_path):
-    image = cv2.imread(image_path)
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    denoised = cv2.fastNlMeansDenoising(gray, h=30)
-    thresh = cv2.adaptiveThreshold(denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                   cv2.THRESH_BINARY, 31, 2)
-    kernel = np.ones((1, 1), np.uint8)
-    processed_image = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
-    return processed_image
+model = genai.GenerativeModel("gemini-1.5-pro-latest")  # or another model if you prefer
 
 def process_image(image_path):
     try:
-        detected_text = reader.readtext(image_path, detail=0)
-        return "\n".join(detected_text) if detected_text else "No text detected."
+        # Perform OCR on the image
+        result = reader.readtext(image_path)
+        text = "\n".join([item[1] for item in result])  # Extract the detected text
+        return text
     except Exception as e:
-        return f"OCR Failed: {str(e)}"
+        return str(e)
 
 def analyze_historical_period(text):
     try:
+        # Use Google Gemini AI to analyze the historical period of the text
         response = model.generate_content(f"Analyze the historical period of this text:\n{text}")
         return response.text if response.text else "Analysis failed."
     except Exception as e:
