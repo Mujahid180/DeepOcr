@@ -1,0 +1,5 @@
+Flask==2.3.2
+easyocr
+opencv-python
+numpy
+google-generativeai
